@@ -1,0 +1,113 @@
+IPTABLES
+=======
+echo 1 >/proc/sys/net/ipv4/ip_forward : sementara
+sysctl -w net.ipv4.ip_forward=1 :sementara ( untuk cek ketik sysctl net.ipv4.ip_forward )
+/etc/sysctl.conf : permanen
+
+prerouting--------------> input ------> process ----------> output  ----------> postrouting
+									 l																																					 ^
+									 l																																					  |
+									 l-------> forward ----------------------------------------------------------------- l    
+
+
+iptables -t[tablename] -Option[chain] Matching Action 
+
+Tabel
+---------
+filter : filter paket (perizinan)
+nat : perubahan alamat
+mangle : merubah ip header
+
+filter (table)
+---------
+input : paket yng menuju kita ( prerouting -> input ) 
+output : paket yang keluar dari kita ( output -> postrouting )
+forward : paket melewati kita karena tujuannya untuk komputer lain ( prerouting -> forward -> postrouting )
+
+nat(table)
+prerouting (tujuan) : berlaku -i,DNAT,REDIRECT
+postrouting (sumber) : berlaku -o,SNAT
+output :
+
+Option
+----------
+-v : verbose
+-n : numeric
+-L : list
+-A : append
+-D : delete (baris ke berapa)
+-P : Policy (default dari chain)
+-F : menghapus semua perintah iptable
+-X : menghapus chain tambahan yg kita buat
+
+Matching
+--------------
+! -p : protokol (tcp,udp,icmp)
+! -s : source (xxx.xxx.xxx.xxx/xx atau xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx,xxx.xxx.xxx.xxx)
+! -d : destination (xxx.xxx.xxx.xxx/xx)
+! -i : yang masuk lewat interface (INPUT,FORWARD,PREROUTING)
+! -o : yang keluar interface (OUTPUT,FORWARD,POSTROUTING)
+--dport : tujuan port
+--sport : sumber port
+-m modul_name : untuk menggunakan modul modul
+		comment : --comment "tambah komentar"
+		mac : --mac-source mac_addressnya
+     multiport : ----dport 34,56,78,90
+		state : --state NEW(baru),ESTABLISHED(sudah ada),RELATED(berhubungan)
+	   time : --timestart x.xx --time-stop x.xx
+		quota : --quota xxxxxxx (dalam satuan byte)
+		connlimit : --connlimit-above (match jika koneksi lebih besar dri pada yg di sebutkan)   
+		string : --string "android.com" (match jika mengandung kata tertentu)
+
+catatan : tanad seru "!" di belakang option, berarti option tersebut berlaku invers
+
+Action (-j)
+---------
+ACCEPT : menyetujui
+REJECT : menolak (memberika renspon ke pengirim) 
+DROP : menolak ( tidak memberikan respon ke pengirim)
+LOG : membuat log
+REDIRECT : mengalihkan (sama seperti DNAT , gunakan hanya untuk redirect port) 
+DNAT : merubah tujuan paket
+SNAT : merubah sumber paket
+( option: )
+MASQUERADE : menyamarkan sumber pengirim menjadi sesuai denga interface yang di sebutkan
+--to : mengalih ke ip atau ip:port tertentu
+--to-port : mengalihkan ke port tertentu (untuk redirect)
+--log-prefix : untuk log (-j LOG)
+ 
+catatan: 
+-secara default jika option -t tidak di definisikan maka iptables akan mengacu pada filter
+-jika membuat firewall sebaiknya semua police drop
+-untuk port forwarding pada posisi routing , definisikan destination ip nya , karna prerouting kana berpengaruh pada paket yang menuju komputer kita kemudian pket yang  forward ke komputer lain
+-jika menggunakan option port , harus di  definisikan tipe protokolnya
+-ketika ip_forward di aktif kan
+os yang menjadi router harus menjadi gateway dari semua jaringan
+ip route add default via 192.168.1.1 dev eth0 : menambahkan gateway
+ip addr add 192.168.56.1/24 dev eth0 : menambah ip ke interface
+-log ada di var/log/kern.log
+persistance iptables
+-------------------------------
+harus terinstall iptables-persistent
+iptables-save > /etc/iptables/rules.v4 : save ke file rule 
+iptables-restore < /etc/iptables/rules.v4 : reload dari file rule
+(jdua tehnik di atas juga bsa di gunakan untuk melakukan export import)
+
+( contoh penggunan )
+----------------------------------
+
+policy rule
+---------------
+iptables -t filter -P INPUT DROP
+
+perizinan
+--------------
+iptables -t filter -A INPUT -s 192.168.56.1,192.168.56.2,192.168.56.3 -j DROP
+
+redirect port
+------------------
+iptables -t nat -A PREROUTING --dport 80 -j REDIRECT --to-port 8080 ( akan mengalih kan semua paket yang bertujuan ke kita ataupun paket forward)
+
+berbagi internet
+----------------
+iptables -t nat -A POSTROUTING -o wlan -j MASQUERADE

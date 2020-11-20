@@ -1,0 +1,51 @@
+ls
+==============
+* : brapapun ,char apa saja 
+? :satu char apa saja
+[] : satu char ,yang ada di dalam kurung bsa [124] atau [1-9] (sama seperti di regex)
+--ignore=*.txt : menampilkan apa saja yang selain .txt
+
+git
+=========
+git commit --amend : merubah commit dengan catatan perhatikan di mana anda checkout
+
+nmap script
+------------------
+nmap --script-help "*namascript*"
+
+xargs
+==============
+mengambil output dari suatu perintah,, kemudian meneruskannya menjadi argumen untuk perintah lain.jika tidak ada printah yang di tentukan maka maka xargs akan mengeksekusi perintah echo. xargs juga bisa meneruskan output yang berbentuk list vertikal.xargs memisahkan bersarkan newline dan space
+-0 : memisahkan input berdasarkan null char (bukan spasi/newline)
+biasanya nya jika di kombinasikan dengan command find, ini sangat berguna jika menangani alamat yang mengandung spasi. dan di command find pun harus di ikutsertakan optio "-print0"
+-d : menentukan delimiter
+-t : verbose (menampilkan apa yang di lakukan xargs)
+-n : menentukan jumlah perbarisnya brapa parameter
+karena delimiternya sudah di tentukan yaitu newline.maka jumlah parameter perbarisnya di berdasarkan newline
+-a : sumber input nya dari file 
+-i : untuk replace (contoh -i{} tanda {} artinya placeholder bisa di ganti tanda lain contoh nya %)
+
+catatan: - definisikan -d dan aktifkan mode -i agar bisa di eksekusi perbaris ketika mode replace (horizontal). aktifkan mode replace saja jika (vertikal)
+					  - hati hati jika menggunakan output dari echo, karena echo akan menambahkan newline di bagian akhir.
+
+vertikal to horizontal
+-------------------
+seq 5 | xargs
+edit and execute per line
+----------------------------------------
+seq 5 | xargs -i{} echo {}.txt
+
+horizontal to vertical
+----------------
+echo -n "a b c" | xargs -n 1
+edit and execute per line
+echo -n "a b c" | xargs -n 1 -d ' ' -i{} echo {}.txt
+
+find 
+--------
+-print0 digunakan untuk mencetak alamat lengkap,null char diikut sertakan(tidak seperti biasanya yang otomatis di akhiri dengan newline)
+
+readonly uses the default scope of global even inside functions. declare uses scope local when in a function (unless declare -g).
+
+You can execute more than one command by placing a | between two commands. 
+			
